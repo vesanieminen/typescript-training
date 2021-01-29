@@ -3,7 +3,7 @@ const productsURL = apiURL + "/products/"
 const availabilityURL = apiURL + "/availability/"
 const limit = 10;
 const manufacturers: string[] = [];
-const availabilityMap: any = {}
+const availabilityMap: Record<string, string> = {}
 const parser = new DOMParser();
 
 interface Product {
@@ -58,7 +58,13 @@ async function buildUI(): Promise<void> {
         )
     );
     const availabilities = await fetchAvailability(manufacturers);
-    availabilities.forEach(manufacturer => manufacturer.response.forEach(availability => availabilityMap[availability.id] = parser.parseFromString(availability.DATAPAYLOAD, "text/xml").getElementsByTagName("INSTOCKVALUE")[0].childNodes[0].nodeValue));
+    availabilities.forEach(manufacturer => manufacturer.response.forEach(
+        availability => {
+            let stockValue = parser.parseFromString(availability.DATAPAYLOAD, "text/xml").getElementsByTagName("INSTOCKVALUE")[0].childNodes[0].nodeValue;
+            if (stockValue !== null) {
+                availabilityMap[availability.id] = stockValue;
+            }
+        }));
     data.forEach(productsType =>
         productsType.forEach(product => {
                 return createRow(product)
